@@ -1,0 +1,29 @@
+{
+  "name": "javascript-modernity",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TBeumer/javascript-modernity.git"
+  },
+  "keywords": [
+    "javascript",
+    "ecmascript",
+    "modernity",
+    "signature"
+  ],
+  "author": "Thijs Beumer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TBeumer/javascript-modernity/issues"
+  },
+  "homepage": "https://github.com/TBeumer/javascript-modernity#readme",
+  "dependencies": {
+    "espree": "^10.3.0"
+  }
+}
