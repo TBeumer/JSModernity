@@ -15,16 +15,13 @@ const ast = espree.parse(code, {
 
 console.log(espree.VisitorKeys);
 
-console.log("Quick test :)", JSON.stringify(espree.parse(`
-  function* functionDecExpr() {};
-`, {
-  ecmaVersion: 6,
-}), null, 2));
+// JSON standard does not contain a serializer for BigInts, so we need to define a custom one for JSON.stringify();
+BigInt.prototype.toJSON = function() { return this.toString() };
 
 fs.writeFileSync("ast.json", JSON.stringify(ast, null, 2));
 
-function genModernitySignature(node, signature = BASE_SIGNATURE) {
-  const version = languageVersionCalculator(node);
+function genModernitySignature(node, parent, signature = BASE_SIGNATURE) {
+  const version = languageVersionCalculator(node, parent);
   // console.log("node.type:", node.type, "resulted in version:", version);
 
   if (version !== 0) signature[version]++;
@@ -38,14 +35,14 @@ function genModernitySignature(node, signature = BASE_SIGNATURE) {
     // Single child node
     if (!Array.isArray(branch)) {
       const child = branch;
-      signature = genModernitySignature(child, signature);
+      signature = genModernitySignature(child, node, signature);
       continue;
     }
 
     // Array of child nodes
     const children = branch;
     for (const child of children) {
-      signature = genModernitySignature(child, signature);
+      signature = genModernitySignature(child, node, signature);
     }
   }
   return signature;

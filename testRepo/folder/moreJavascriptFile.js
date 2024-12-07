@@ -1,3 +1,6 @@
+// IfStatement
+if (true) {} // ES3
+
 // Identifier
 let identifier = 10; // ES3
 
@@ -12,13 +15,13 @@ function* generatorFunctionDeclaration() {} // ES6
 async function asyncFunctionDeclaration() {} // ES8
 
 // ForStatement
-for (let i = 0; i < 10; i++) {} // ES3
+for (;;) {}; // ES3
 
 // ForOfStatement
-for (let value of array) {} // ES6
+for (x of {}) {} // ES6
 
 // ForInStatement
-for (let key in obj) {} // ES3
+for (x in {}) {} // ES3
 
 // ExpressionStatement
 x = 2; // ES3
@@ -120,6 +123,9 @@ assignmentExpression |= 10; // ES5
 assignmentExpression ||= 10; // ES12
 assignmentExpression &&= 10; // ES12
 assignmentExpression ??= 10; // ES12
+
+// ArrowFunctionExpression
+let myFunc = () => {}; // ES6
 
 // ArrayPattern
 let [arrayPattern] = [10]; // ES6
