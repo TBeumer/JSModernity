@@ -1,0 +1,2 @@
+myFunc(...args);
+[...elems];

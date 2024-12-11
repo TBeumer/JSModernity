@@ -1,52 +1,82 @@
-const espree = require("espree");
 const fs = require("fs");
-const languageVersionCalculator = require("./languageVersionCalculator");
-const BASE_SIGNATURE = {3: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0}; // TODO use supportedEcmaVersions from espree to generate
+const espree = require("espree");
+const genCodeSignature = require("./utils/signature-gen-util.js");
+const locateFiles = require("./utils/file-locator-util.js");
 
-// const code = fs.readFileSync("testRepo/javascriptFile.js", "utf8");
-const code = fs.readFileSync("testRepo/folder/moreJavascriptFile.js", "utf8");
+// // JSON standard does not contain a serializer for BigInts, so we need to define a custom one for JSON.stringify();
+// BigInt.prototype.toJSON = function() { return this.toString() };
 
-console.log(code);
+// console.log(JSON.stringify(espree.parse(`
+//   ;
+// `, {
+//   ecmaVersion: 16,
+//   sourceType: "commonjs",
+// }), null, 2));
 
-const ast = espree.parse(code, {
-  ecmaVersion: 2024,
-  sourceType: "module",
-});
+// // process.exit(0);
 
-console.log(espree.VisitorKeys);
+const combineSignatures = (sigA, sigB) => {
+  const combined = { ...sigA };
 
-// JSON standard does not contain a serializer for BigInts, so we need to define a custom one for JSON.stringify();
-BigInt.prototype.toJSON = function() { return this.toString() };
+  for (const [key, value] of Object.entries(sigB)) {
+    if (combined[key] === undefined) {
+      combined[key] = value;
+    } else {
+      combined[key] += value;
+    }
+  }
 
-fs.writeFileSync("ast.json", JSON.stringify(ast, null, 2));
+  return combined;
+};
 
-function genModernitySignature(node, parent, signature = BASE_SIGNATURE) {
-  const version = languageVersionCalculator(node, parent);
-  // console.log("node.type:", node.type, "resulted in version:", version);
+const genSignatureForFolder = (folder) => {
+  const files = locateFiles(folder, ".js");
+  let accSignature = {};
 
-  if (version !== 0) signature[version]++;
+  for (const file of files) {
+    const fileCode = fs.readFileSync(file, "utf8");
 
-  // console.log(espree.VisitorKeys[node.type])
-  for (const visitorKey of espree.VisitorKeys[node.type]) {
-    const branch = node[visitorKey];
-
-    if (!branch) continue;
-
-    // Single child node
-    if (!Array.isArray(branch)) {
-      const child = branch;
-      signature = genModernitySignature(child, node, signature);
+    try {
+      espree.parse(fileCode, {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      });
+    } catch (e) {
+      // console.warn(`Warning: espree could not parse file ${file}, skipping... Reason: ${e.message}`);
       continue;
     }
 
-    // Array of child nodes
-    const children = branch;
-    for (const child of children) {
-      signature = genModernitySignature(child, node, signature);
+    let fileSignature;
+    try {
+      // console.log("doing file:", file);
+      let { signature, errCount } = genCodeSignature(fileCode);
+      fileSignature = signature;
+
+      if (errCount > 0) {
+        console.warn(`Warning: ${errCount} error(s) encountered while generating the modernity signature for file ${file}, see errors above.`);
+      }
+    } catch (e) {
+      console.warn(`Error while processing file ${file}: ${e.message}`);
     }
-  }
-  return signature;
+
+    accSignature = combineSignatures(accSignature, fileSignature);
+  };
+
+  return accSignature;
 }
 
-const signature = genModernitySignature(ast);
-console.log("signature:", signature);
+const inputFolders = [
+  "downloaded_repos/axios-1.x",
+  "downloaded_repos/bootstrap-main",
+  "downloaded_repos/javascript-algorithms-master",
+  "downloaded_repos/javascript-master",
+  "downloaded_repos/react-main",
+  "downloaded_repos/30-seconds-of-code-master",
+  "downloaded_repos/next.js-canary",
+  "downloaded_repos/node-main",
+];
+
+for (const folder of inputFolders) {
+  console.log("Processing folder:", folder, "...");
+  console.log("signature:", genSignatureForFolder(folder));
+}

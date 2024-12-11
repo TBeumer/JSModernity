@@ -22,8 +22,6 @@ const calculators = {
    * 
    * Version history:
    * ES3 (1999): Basic array expressions
-   * 
-   * TODO: what about spread operator, array destructuring and array methods?
    */
   "ArrayExpression": (node, parent) => {
     return 3;
@@ -33,8 +31,6 @@ const calculators = {
    * 
    * Version history:
    * ES6 (2015): Array destructuring
-   * 
-   * TODO: what about nested arrays and spread operator for rest element?
    */
   "ArrayPattern": (node, parent) => {
     return 6;
@@ -55,16 +51,14 @@ const calculators = {
    * ES3 (1999): Basic assignment expression: 'a = 4;'
    * ES5 (2009): Compound assignment expressions with operators: +=, -=, *=, /=, %=, <<=, >>=, >>>=, &=, |=, ^=
    * ES12 (2021): Logical assignment expressions: ||=, &&=, ??=
-   * 
-   * TODO: spread syntax in assignments since ES9? And what about destructuring assignments since ES6?
    */
   "AssignmentExpression": (node, parent) => {
     if ("=" === node.operator) return 3;
     if (["+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "|=", "^="].includes(node.operator)) return 5;
     if (["&&=", "||=", "??="].includes(node.operator)) return 12;
     
-    console.warn("Unknown assignment operator:", node.operator, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown assignment operator:", node.operator, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: AssignmentPattern
@@ -88,15 +82,15 @@ const calculators = {
    * NodeType: BinaryExpression
    * 
    * Version history:
-   * ES3 (1999): Binary expressions with operators: +, -, *, /, %, <<, >>, >>>, &, |, ^, ==, !=, ===, !==, <, <=, >, >=
+   * ES3 (1999): Binary expressions with operators: +, -, *, /, %, <<, >>, >>>, &, |, ^, ==, !=, ===, !==, <, <=, >, >=, instanceof, in
    * ES7 (2016): Exponentiation operator: **
    */
   "BinaryExpression": (node, parent) => {
-    if (["+", "-", "*", "/", "%", "<<", ">>", ">>>", "&", "|", "^", "==", "!=", "===", "!==", "<", "<=", ">", ">="].includes(node.operator)) return 3;
+    if (["+", "-", "*", "/", "%", "<<", ">>", ">>>", "&", "|", "^", "==", "!=", "===", "!==", "<", "<=", ">", ">=", "instanceof", "in"].includes(node.operator)) return 3;
     if ("**" === node.operator) return 7;
 
-    console.warn("Unknown binary operator:", node.operator, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown binary operator:", node.operator, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: BreakStatement
@@ -394,11 +388,12 @@ const calculators = {
    * ES3 (1999): String, Integer, Decimal, Hexadecimal, Regex, Boolean, Null & Undefined literals
    * ES6 (2015): Unicode, Binary & Octal literals
    * ES11 (2020): BigInt literals
+   * ES12 (2021): Numeric separators
    */
   "Literal": (node, parent) => {
     if (/^(([0-9]+)|([0-9]+\.)|(\.[0-9]+)|([0-9]+\.[0-9]+))$/g.test(node.raw)) return 3; // Integer or Decimal
     if (/^0[xX][0-9a-fA-F]+$/g.test(node.raw)) return 3; // Hexadecimal
-    if (/^[0-9]+e[0-9]+$/g.test(node.raw)) return 3; // Hexadecimal
+    if (/^[0-9\.]+[eE][-+]?[0-9]+$/g.test(node.raw)) return 3; // E notation
     if (node.regex !== undefined) return 3; // Regex
     if (["true", "false", "null", "undefined"].includes(node.raw)) return 3; // Boolean, Null or Undefined
     
@@ -413,8 +408,15 @@ const calculators = {
 
     if (node.bigint !== undefined) return 11; // BigInt
 
-    console.warn("Unknown literal type:", node.raw, "in node:", node); // TODO: better error handling
-    return 0;
+    // Numbers with numeric separators
+    if (/^(([_0-9]+)|([_0-9]+\.)|(\.[_0-9]+)|([_0-9]+\.[_0-9]+))$/g.test(node.raw)) return 12; // Integer or Decimal
+    if (/^0[xX][_0-9a-fA-F]+$/g.test(node.raw)) return 12; // Hexadecimal
+    if (/^[_0-9\.]+[eE][-+]?[_0-9]+$/g.test(node.raw)) return 12; // E notation
+    if (/^0[bB][_01]+$/g.test(node.raw)) return 12; // Binary
+    if (/^0[oO][_0-7]+$/g.test(node.raw)) return 12; // Octal
+
+    console.warn("Non-recognized literal value:", node.raw, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: LogicalExpression
@@ -427,8 +429,8 @@ const calculators = {
     if (["||", "&&"].includes(node.operator)) return 3;
     if ("??" === node.operator) return 11;
 
-    console.warn("Unknown logical operator:", node.operator, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown logical operator:", node.operator, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: MemberExpression
@@ -450,8 +452,8 @@ const calculators = {
     if ("new" === node.meta.name && "target" === node.property.name) return 6;
     if ("import" === node.meta.name && "meta" === node.property.name) return 11;
 
-    console.warn("Unknown meta property:", node.meta.name, ".", node.property.name, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown meta property:", node.meta.name, ".", node.property.name, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: MethodDefinition
@@ -510,6 +512,15 @@ const calculators = {
     return 3;
   },
   /**
+   * NodeType: PropertyDefinition
+   * 
+   * Version history:
+   * ES13: Instance and static class fields
+   */
+  "PropertyDefinition": (node, parent) => {
+    return 13;
+  },
+  /**
    * NodeType: RestElement
    * 
    * Version history:
@@ -517,11 +528,11 @@ const calculators = {
    * ES9 (2018): Rest properties in object destructuring
    */
   "RestElement": (node, parent) => {
-    if (["ArrayPattern", "FunctionDeclaration", "ArrowFunctionExpression"].includes(parent.type)) return 6;
+    if (["ArrayPattern", "FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(parent.type)) return 6;
     if (parent.type === "ObjectPattern") return 9;
 
-    console.warn("Unknown rest element in parent node:", parent.type, "node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown rest element in parent node:", parent.type, "node:", node);
+    return -1;
   },
   /**
    * NodeType: ReturnStatement
@@ -649,8 +660,8 @@ const calculators = {
   "UnaryExpression": (node, parent) => {
     if (["delete", "void", "typeof", "!", "~", "+", "-"].includes(node.operator)) return 3;
 
-    console.warn("Unknown unary operator:", node.operator, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown unary operator:", node.operator, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: UpdateExpression
@@ -661,8 +672,8 @@ const calculators = {
   "UpdateExpression": (node, parent) => {
     if (["++", "--"].includes(node.operator)) return 3;
 
-    console.warn("Unknown update operator:", node.operator, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown update operator:", node.operator, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: VariableDeclaration
@@ -677,8 +688,8 @@ const calculators = {
     if (["var"].includes(node.kind)) return 3;
     if (["let", "const"].includes(node.kind)) return 6;
 
-    console.warn("Unknown variable declaration kind:", node.kind, "in node:", node); // TODO: better error handling
-    return 0;
+    console.warn("Unknown variable declaration kind:", node.kind, "in node:", node);
+    return -1;
   },
   /**
    * NodeType: VariableDeclarator
@@ -721,8 +732,8 @@ const calculators = {
 module.exports = (node, parent) => {
   const type = node.type;
 
-  if (calculators[type]) return calculators[type](node);
+  if (calculators[type]) return calculators[type](node, parent);
 
   console.log("Unknown node type:", node.type, "for node:\n", node);
-  return 0;
+  return -1;
 }

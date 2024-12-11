@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
+  },
+  "jest": {
+    "testPathIgnorePatterns": ["downloaded_repos"]
   },
   "repository": {
     "type": "git",
@@ -25,5 +28,8 @@
   "homepage": "https://github.com/TBeumer/javascript-modernity#readme",
   "dependencies": {
     "espree": "^10.3.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
