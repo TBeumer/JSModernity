@@ -3,18 +3,6 @@ const espree = require("espree");
 const genCodeSignature = require("./utils/signature-gen-util.js");
 const locateFiles = require("./utils/file-locator-util.js");
 
-// // JSON standard does not contain a serializer for BigInts, so we need to define a custom one for JSON.stringify();
-// BigInt.prototype.toJSON = function() { return this.toString() };
-
-// console.log(JSON.stringify(espree.parse(`
-//   ;
-// `, {
-//   ecmaVersion: 16,
-//   sourceType: "commonjs",
-// }), null, 2));
-
-// // process.exit(0);
-
 const combineSignatures = (sigA, sigB) => {
   const combined = { ...sigA };
 
@@ -42,13 +30,11 @@ const genSignatureForFolder = (folder) => {
         sourceType: "module",
       });
     } catch (e) {
-      // console.warn(`Warning: espree could not parse file ${file}, skipping... Reason: ${e.message}`);
-      continue;
+      continue; // Skip files that cannot be parsed
     }
 
     let fileSignature;
     try {
-      // console.log("doing file:", file);
       let { signature, errCount } = genCodeSignature(fileCode);
       fileSignature = signature;
 

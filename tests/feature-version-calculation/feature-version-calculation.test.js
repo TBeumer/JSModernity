@@ -15,6 +15,7 @@ const versionFolders = {
   "es13": 13,
   "es14": 14,
   "es15": 15,
+  "es16": 16,
 };
 
 for (const [folder, version] of Object.entries(versionFolders)) {

@@ -50,11 +50,13 @@ const calculators = {
    * Version history:
    * ES3 (1999): Basic assignment expression: 'a = 4;'
    * ES5 (2009): Compound assignment expressions with operators: +=, -=, *=, /=, %=, <<=, >>=, >>>=, &=, |=, ^=
+   * ES7 (2016): Exponentiation assignment operator: **=
    * ES12 (2021): Logical assignment expressions: ||=, &&=, ??=
    */
   "AssignmentExpression": (node, parent) => {
     if ("=" === node.operator) return 3;
     if (["+=", "-=", "*=", "/=", "%=", "<<=", ">>=", ">>>=", "&=", "|=", "^="].includes(node.operator)) return 5;
+    if ("**=" === node.operator) return 7;
     if (["&&=", "||=", "??="].includes(node.operator)) return 12;
     
     console.warn("Unknown assignment operator:", node.operator, "in node:", node);
@@ -328,6 +330,15 @@ const calculators = {
     return 3;
   },
   /**
+   * NodeType: ImportAttribute
+   * 
+   * Version history:
+   * ES16 (2025): Import attributes
+   */
+  "ImportAttribute": (node, parent) => {
+    return 16;
+  },
+  /**
    * NodeType: ImportDeclaration
    * 
    * Version history:
@@ -398,7 +409,7 @@ const calculators = {
     if (["true", "false", "null", "undefined"].includes(node.raw)) return 3; // Boolean, Null or Undefined
     
     // String
-    if (/^'.*'$/g.test(node.raw) || /^".*"$/g.test(node.raw)) {
+    if (/^'.*'$/s.test(node.raw) || /^".*"$/s.test(node.raw)) {
       if (/\\u{[0-9a-zA-Z]+}/g.test(node.raw)) return 6; // Unicode
       return 3;
     };
