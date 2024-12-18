@@ -1,8 +1,15 @@
-const espree = require("espree");
-const calcNodeLangVersion = require("./language-version-calc-util.js");
+import { supportedEcmaVersions, VisitorKeys, parse } from "espree";
+import calcNodeLangVersion from "./language-version-calc-util.js";
 
-// Base signature containing all supported ECMAScript versions for espree as keys, and 0 as values
-const BASE_SIGNATURE = espree.supportedEcmaVersions.reduce((o, key) => ({ ...o, [key]: 0 }), {});
+/**
+ * Creates an empty modernity signature object containing 
+ * all supported ECMAScript versions as keys, and 0 as values
+ * 
+ * @returns {object} The empty modernity signature object
+ */
+const createEmptySignature = () => {
+  return supportedEcmaVersions.reduce((o, key) => ({ ...o, [key]: 0 }), {});
+};
 
 /**
  * Generates a modernity signature for the given node
@@ -13,7 +20,8 @@ const BASE_SIGNATURE = espree.supportedEcmaVersions.reduce((o, key) => ({ ...o, 
  * @param {number} errCount the current number of errors encountered while generating the signature
  * @returns {object} The generated modernity signature and total the number of errors encountered
  */
-const genNodeSignature = (node, parent, signature = BASE_SIGNATURE, errCount = 0) => {
+const genNodeSignature = (node, parent, signature, errCount = 0) => {
+  if (!signature) signature = createEmptySignature();
   if (!node) return { signature, errCount };
 
   const version = calcNodeLangVersion(node, parent);
@@ -21,7 +29,7 @@ const genNodeSignature = (node, parent, signature = BASE_SIGNATURE, errCount = 0
   if (version > 0) signature[version]++;
   if (version === -1) errCount++;
 
-  for (const visitorKey of espree.VisitorKeys[node.type]) {
+  for (const visitorKey of VisitorKeys[node.type]) {
     const branch = node[visitorKey];
 
     if (!branch) continue;
@@ -49,8 +57,8 @@ const genNodeSignature = (node, parent, signature = BASE_SIGNATURE, errCount = 0
  * @param {string} code The code to generate the modernity signature for
  * @returns {object} The modernity signature and the total number of errors encountered
  */
-module.exports = (code) => {
-  const ast = espree.parse(code, {
+export default (code) => {
+  const ast = parse(code, {
     ecmaVersion: "latest",
     sourceType: "module",
   });

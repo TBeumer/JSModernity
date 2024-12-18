@@ -740,7 +740,7 @@ const calculators = {
   }
 }
 
-module.exports = (node, parent) => {
+export default (node, parent) => {
   const type = node.type;
 
   if (calculators[type]) return calculators[type](node, parent);

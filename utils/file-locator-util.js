@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 /**
  * Recursively checks all files in the given folder and its subfolders
  * for any files with the given file extension, and returns the paths
@@ -7,10 +10,7 @@
  * @param {string} fileExtension The file extension to search for
  * @returns {Array<string>} The paths to the found files
  */
-module.exports = (folder, fileExtension) => {
-  const fs = require("fs");
-  const path = require("path");
-
+const locateFiles = (folder, fileExtension) => {
   const files = fs.readdirSync(folder);
   let foundFiles = [];
 
@@ -19,7 +19,7 @@ module.exports = (folder, fileExtension) => {
     const fileStat = fs.statSync(filePath);
 
     if (fileStat.isDirectory()) {
-      foundFiles = foundFiles.concat(module.exports(filePath, fileExtension));
+      foundFiles = foundFiles.concat(locateFiles(filePath, fileExtension));
     } else if (file.endsWith(fileExtension)) {
       foundFiles.push(filePath);
     }
@@ -27,3 +27,5 @@ module.exports = (folder, fileExtension) => {
 
   return foundFiles;
 }
+
+export default locateFiles;
