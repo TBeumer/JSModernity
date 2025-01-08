@@ -1,6 +1,8 @@
 # data processinging folders
-downloaded_repos
+temp_sig_gen_*
 result_signatures
+.ipynb_checkpoints
+anaconda_projects
 
 ### AUTO GENERATED ###
 # Logs
