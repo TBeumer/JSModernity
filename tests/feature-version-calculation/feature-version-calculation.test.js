@@ -1,6 +1,6 @@
-const fs = require("fs");
-const espree = require("espree");
-const genCodeSignature = require("../../utils/signature-gen-util.js");
+import fs from "fs";
+import { parse } from "espree";
+import { genFileSignature } from "../../utils/signature-gen-util.js";
 
 const versionFolders = {
   "es3-or-earlier": 3,
@@ -20,6 +20,7 @@ const versionFolders = {
 
 for (const [folder, version] of Object.entries(versionFolders)) {
   const files = fs.readdirSync(`tests/feature-version-calculation/${folder}`);
+
   for (const file of files) {
     if (!file.endsWith(".source.js")) continue;
 
@@ -27,7 +28,7 @@ for (const [folder, version] of Object.entries(versionFolders)) {
 
     test(`Feature ${file.split('.')[0]} from ${folder}, can be parsed by ECMAScript version ${version}`, () => {
       expect(() => {
-        espree.parse(code, {
+        parse(code, {
           ecmaVersion: version,
           sourceType: (version < 6 ? "script" : "module"),
         });
@@ -38,7 +39,7 @@ for (const [folder, version] of Object.entries(versionFolders)) {
 
     test(`Feature ${file.split('.')[0]} from ${folder}, cannot be parsed by ECMAScript version ${version - 1}`, () => {
       expect(() => {
-        espree.parse(code, {
+        parse(code, {
           ecmaVersion: version - 1,
           sourceType: (version - 1 < 6 ? "script" : "module"),
         });
@@ -46,8 +47,8 @@ for (const [folder, version] of Object.entries(versionFolders)) {
     });
 
     test(`The modernity signature for feature ${file.split('.')[0]} from ${folder}, does not contain detections of language versions higher than ECMAScript version ${version}`, () => {
-      const { signature } = genCodeSignature(code);
-      for (const [key, value] of Object.entries(signature)) {
+      const signature = genFileSignature(`tests/feature-version-calculation/${folder}/${file}`);
+      for (const [key, value] of Object.entries(signature.aggregate)) {
         if (parseInt(key) > version) {
           expect(value).toBe(0);
         }
@@ -55,8 +56,8 @@ for (const [folder, version] of Object.entries(versionFolders)) {
     });
 
     test(`The modernity signature for feature ${file.split('.')[0]} from ${folder}, contains at least one detection of ECMAScript version ${version}`, () => {
-      const { signature } = genCodeSignature(code);
-      expect(signature[version]).toBeGreaterThan(0);
+      const signature = genFileSignature(`tests/feature-version-calculation/${folder}/${file}`);
+      expect(signature.aggregate[version]).toBeGreaterThan(0);
     });
   }
 }

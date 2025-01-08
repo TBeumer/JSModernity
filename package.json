@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "echo \"Please use 'node ./run.js <args>' to run the program.\"",
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "jest": {
     "modulePathIgnorePatterns": [

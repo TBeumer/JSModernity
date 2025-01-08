@@ -8,23 +8,9 @@ import path from "path";
  * 
  * @param {string} folder The folder to search for files in
  * @param {string} fileExtension The file extension to search for
- * @param {boolean} reportProgress Whether to report progress to the console
- * @param {boolean} isExecRoot A paremeter to keep track of recursion stack
  * @returns {Array<string>} The paths to the found files
  */
-const locateFiles = (folder, fileExtension, reportProgress = true, isExecRoot = true) => {
-
-  /**
-   * Reports the progress of the file locating to the console
-   */
-  const doProgressReport = (amount, final = false) => {
-    if (!reportProgress) return;
-
-    process.stdout.cursorTo(0);
-    process.stdout.clearLine(1);
-    process.stdout.write(`Locating files: ${amount} '${fileExtension}' files found` + (final ? '\n' : ''));
-  };
-
+const locateFiles = (folder, fileExtension) => {
   const files = fs.readdirSync(folder);
   let foundFiles = [];
 
@@ -33,15 +19,10 @@ const locateFiles = (folder, fileExtension, reportProgress = true, isExecRoot = 
     const fileStat = fs.statSync(filePath);
 
     if (fileStat.isDirectory()) {
-      foundFiles = foundFiles.concat(locateFiles(filePath, fileExtension, true, false));
+      foundFiles = foundFiles.concat(locateFiles(filePath, fileExtension));
     } else if (file.endsWith(fileExtension)) {
       foundFiles.push(filePath);
     }
-  }
-
-  // Only root of execution stack may end the progress report
-  if (isExecRoot) {
-    doProgressReport(foundFiles.length, true);
   }
 
   return foundFiles;

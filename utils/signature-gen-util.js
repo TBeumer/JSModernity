@@ -19,7 +19,7 @@ const createEmptySignature = () => {
 };
 
 /**
- * Generates a modernity signature for a given directory 
+ * Generates a modernity signature for a given directory
  * by recursing over all valid JavaScript files in the 
  * given directory.
  * 
@@ -28,11 +28,38 @@ const createEmptySignature = () => {
  * .js file extension or that cannot be parsed by espree 
  * will be skipped.
  * 
- * @param {string} path The path to the directory
- * @returns {object} The modernity signature for the directory
+ * @param {string} path The path to the file or directory
+ * @returns {object} The generated modernity signature
  */
 export const genDirectorySignature = (path) => {
+
+  // Get all .js files in directory
   const files = locateFiles(path, ".js");
+
+  // Generate signature
+  return genSignature(files);
+}
+
+/**
+ * Generates a modernity signature for a given file.
+ * 
+ * @param {string} path The path to the file or directory
+ * @returns {object} The generated modernity signature
+ */
+export const genFileSignature = (path) => {
+  const files = [path];
+
+  // Generate signature
+  return genSignature(files);
+}
+
+/**
+ * Generates a modernity signature for a given list of files.
+ * 
+ * @param {Array<string>} files The files to use in signature generation
+ * @returns {object} The generated modernity signature
+ */
+const genSignature = (files) => {
 
   // Progress counters
   let processed = 0;
